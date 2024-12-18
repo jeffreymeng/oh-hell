@@ -29,7 +29,3 @@
 {#if error}
 	<p class="mt-2 text-sm text-red-600">Error: {error}</p>
 {/if}
-
-<!-- todo: choose players here -->
-<!-- todo: when you finish a game, you can create a new game with same or different players -->
-<!-- todo: you can log into an account and link a player to your account, which will allow you to see stats -->

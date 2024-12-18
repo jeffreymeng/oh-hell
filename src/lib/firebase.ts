@@ -1,6 +1,7 @@
 import { FirebaseError, initializeApp } from "firebase/app";
-import { doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { customAlphabet } from "nanoid";
+import { Game, type PlayerId } from "./game";
 
 // todo: maybe use sqids or some other counter + hash based method
 const ID_ALPHABET = "123456789abcdefghijkmnopqrstuvwxyz"; // excludes l/0 (similiar to I/O)
@@ -19,26 +20,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-export enum GameStatus {
-    BIDDING = "BIDDING",
-    PLAYING = "PLAYING"
-}
 
+/**
+ * Creates a new game with the provided list of player names.
+ */
 export async function newGame(players: string[]) {
     const MAX_RETRIES = 10;
     for (let i = 0; i < MAX_RETRIES; i++) {
         const id = nanoid();
         try {
-            await setDoc(doc(db, "games", id), {
-                created_time: serverTimestamp(),
-                players: players.map(name => ({
-                    name,
-                    points: 0
-                })),
-                history: [],
-                round: 1,
-                status: GameStatus.BIDDING
-            });
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const gameJson: any = Game.new(id, players).toJson();
+            gameJson.createdTime = serverTimestamp();
+            await setDoc(doc(db, "games", id), gameJson);
             return id;
         } catch (e) {
             if (e instanceof FirebaseError && e.code === "permission-denied") {
@@ -49,5 +43,26 @@ export async function newGame(players: string[]) {
         }
     }
     throw new Error("Unable to generate game. Please try again later (code: exceeded-max-create-retries)");
+}
+
+export async function updateBid(game: Game, round: number, playerId: PlayerId, bid: number) {
+    game.rounds[round][playerId].bid = bid;
+    await updateDoc(doc(db, "games", game.id), {
+        rounds: game.rounds
+    });
+}
+
+/**
+ * Attaches a callback to updates on the game. Returns a function to call to unsubscribe.
+ */
+export function onGameUpdate(gameId: string, onUpdate: (data: Game) => void, onError: (e: unknown) => void): () => void {
+    const unsub = onSnapshot(doc(db, "games", gameId), (doc) => {
+        try {
+            onUpdate(Game.fromJson(doc.data() as Record<string, unknown>, gameId));
+        } catch (e) {
+            onError(e);
+        }
+    });
+    return unsub;
 }
 
