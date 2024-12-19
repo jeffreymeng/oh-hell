@@ -859,6 +859,11 @@
   resolved "https://registry.yarnpkg.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.28.1.tgz#4dff5c4259ebe6c5b4a8f2c5bc3829b7a8447ff0"
   integrity sha512-ZvK2jBafvttJjoIdKm/Q/Bh7IJ1Ose9IBOwpOXcOvW3ikGTQGmKDgxTC6oCAzW6PynbkKP8+um1du81XJHZ0JA==
 
+"@steeze-ui/heroicons@^2.4.0":
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/@steeze-ui/heroicons/-/heroicons-2.4.2.tgz#d1f84d685b3a31b8d08c2cab5fadac9302ef9b7c"
+  integrity sha512-66luL+uaxyC6mcZigewH4phfDxNWj4sH+n6qK2VnY3zcgpMmNAgVQbMGfZYfKhLqrUo13BlqpmhWuHqAUpehlA==
+
 "@sveltejs/adapter-auto@^3.0.0":
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/@sveltejs/adapter-auto/-/adapter-auto-3.3.1.tgz#57a3d9c402bea468f0899755758551e7e74deaae"
@@ -2429,6 +2434,13 @@ svelte-eslint-parser@^0.43.0:
     espree "^9.6.1"
     postcss "^8.4.39"
     postcss-scss "^4.0.9"
+
+svelte-hero-icons@^5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/svelte-hero-icons/-/svelte-hero-icons-5.2.0.tgz#a721f5d1db40380bde3e3e5484490833f3e45844"
+  integrity sha512-KpdMTL0bOnkxciEmDXvyVF/R5nrZ1x1uHCSt9gMrrbEd3g5HSIaaDChOutTOfeI+cZ3EJbb+OcBH/lBzJr1aEw==
+  dependencies:
+    "@steeze-ui/heroicons" "^2.4.0"
 
 svelte@^5.0.0:
   version "5.11.2"

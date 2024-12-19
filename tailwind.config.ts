@@ -9,5 +9,10 @@ export default {
     extend: {}
   },
 
-  plugins: [typography, forms]
+  plugins: [typography, forms],
+
+  future: {
+    // fixes sticky hover on ios
+    hoverOnlyWhenSupported: true,
+  },
 } satisfies Config;

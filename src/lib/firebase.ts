@@ -45,8 +45,16 @@ export async function newGame(players: string[]) {
     throw new Error("Unable to generate game. Please try again later (code: exceeded-max-create-retries)");
 }
 
-export async function updateBid(game: Game, round: number, playerId: PlayerId, bid: number) {
-    game.rounds[round][playerId].bid = bid;
+export async function updateBid(game: Game, roundNum: number, playerId: PlayerId, bid: number | null) {
+    game.round(roundNum)[playerId].bid = bid;
+    await updateDoc(doc(db, "games", game.id), {
+        rounds: game.rounds
+    });
+}
+
+export async function updateTricksWon(game: Game, roundNum: number, playerId: PlayerId, tricksWon: number) {
+    console.log("updateTricksWon", game.round(roundNum), playerId, tricksWon);
+    game.round(roundNum)[playerId].won = tricksWon;
     await updateDoc(doc(db, "games", game.id), {
         rounds: game.rounds
     });
