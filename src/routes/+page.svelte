@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { newGame } from '$lib/firebase';
-	import EnterPlayers from '../components/EnterPlayers.svelte';
+	import GameSetup from '../components/ConfigureGame.svelte';
 
 	let error = $state('');
 </script>
@@ -9,12 +9,12 @@
 <h2 class="pb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
 	Oh Hell Scorekeeper
 </h2>
-<p class="mt-2 text-gray-600">Enter names in order of play (e.g. clockwise).</p>
-<EnterPlayers
-	onsubmit={async (players) => {
+
+<GameSetup
+	onsubmit={async (players, scoringFormula) => {
 		error = '';
 		try {
-			const id = await newGame(players);
+			const id = await newGame(players, scoringFormula);
 			goto(`/${id}`);
 		} catch (e) {
 			console.log(e);

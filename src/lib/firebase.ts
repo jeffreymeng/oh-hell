@@ -2,10 +2,10 @@ import { FirebaseError, initializeApp } from "firebase/app";
 import { doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { customAlphabet } from "nanoid";
 import { Game, type PlayerId } from "./game";
+import type { ScoringFormula } from "./scoring-formula";
 
-// todo: maybe use sqids or some other counter + hash based method
 const ID_ALPHABET = "123456789abcdefghijkmnopqrstuvwxyz"; // excludes l/0 (similiar to I/O)
-const nanoid = customAlphabet(ID_ALPHABET, 8);
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyD3vtSQO3Q2YR4jTsDp4i96fdNDmy7CZQU",
@@ -24,40 +24,58 @@ export const db = getFirestore(app);
 /**
  * Creates a new game with the provided list of player names.
  */
-export async function newGame(players: string[]) {
-    const MAX_RETRIES = 10;
-    for (let i = 0; i < MAX_RETRIES; i++) {
-        const id = nanoid();
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const gameJson: any = Game.new(id, players).toJson();
-            gameJson.createdTime = serverTimestamp();
-            await setDoc(doc(db, "games", id), gameJson);
-            return id;
-        } catch (e) {
-            if (e instanceof FirebaseError && e.code === "permission-denied") {
-                // id is in use
-                continue;
+export async function newGame(players: string[], scoringFormula: ScoringFormula) {
+    const MAX_RETRIES_PER_LENGTH = 5;
+    const MAX_LENGTH = 9;
+    for (let length = 6; length <= MAX_LENGTH; length++) {
+        const nanoid = customAlphabet(ID_ALPHABET, length);
+
+        for (let i = 0; i < MAX_RETRIES_PER_LENGTH; i++) {
+            const id = nanoid();
+            try {
+                const gameJson = Game.new(id, players, scoringFormula).toJson();
+                (gameJson as Record<string, unknown>).createdTime = serverTimestamp();
+                await setDoc(doc(db, "games", id), gameJson);
+                return id;
+            } catch (e) {
+                if (e instanceof FirebaseError && e.code === "permission-denied") {
+                    // id is in use
+                    continue;
+                }
+                throw e;
             }
-            throw e;
         }
     }
     throw new Error("Unable to generate game. Please try again later (code: exceeded-max-create-retries)");
 }
 
 export async function updateBid(game: Game, roundNum: number, playerId: PlayerId, bid: number | null) {
-    game.round(roundNum)[playerId].bid = bid;
-    await updateDoc(doc(db, "games", game.id), {
-        rounds: game.rounds
+    const gameClone = game.clone();
+    gameClone.round(roundNum)[playerId].bid = bid;
+    await updateDoc(doc(db, "games", gameClone.id), {
+        rounds: gameClone.rounds
     });
 }
 
-export async function updateTricksWon(game: Game, roundNum: number, playerId: PlayerId, tricksWon: number) {
-    console.log("updateTricksWon", game.round(roundNum), playerId, tricksWon);
-    game.round(roundNum)[playerId].won = tricksWon;
-    await updateDoc(doc(db, "games", game.id), {
-        rounds: game.rounds
+export async function updateTricksWon(game: Game, roundNum: number, playerId: PlayerId, tricksWon: number | null) {
+    const gameClone = game.clone();
+    gameClone.round(roundNum)[playerId].won = tricksWon;
+    await updateDoc(doc(db, "games", gameClone.id), {
+        rounds: gameClone.rounds
     });
+}
+
+export async function updateCurrentRound(game: Game, currentRound: number) {
+    await updateDoc(doc(db, "games", game.id), {
+        currentRound: currentRound
+    });
+}
+
+export class GameNotFoundError extends Error {
+    constructor() {
+        super("Game not found");
+        this.name = "GameNotFonundError";
+    }
 }
 
 /**
@@ -66,7 +84,13 @@ export async function updateTricksWon(game: Game, roundNum: number, playerId: Pl
 export function onGameUpdate(gameId: string, onUpdate: (data: Game) => void, onError: (e: unknown) => void): () => void {
     const unsub = onSnapshot(doc(db, "games", gameId), (doc) => {
         try {
-            onUpdate(Game.fromJson(doc.data() as Record<string, unknown>, gameId));
+            if (!doc.exists()) {
+                throw new GameNotFoundError();
+            }
+            console.log("firebasedirect", doc.data().players.map((p) => p.id).join(','));
+            const g = Game.fromJson(doc.data() as Record<string, unknown>, gameId);
+            console.log("firebase direct game players", g.players.map((p) => p.id).join(','));
+            onUpdate(g);
         } catch (e) {
             onError(e);
         }

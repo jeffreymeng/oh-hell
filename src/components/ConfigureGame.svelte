@@ -1,12 +1,16 @@
 <script lang="ts">
+	import { SCORING_FORMULA_OPTIONS, type ScoringFormula } from '$lib/scoring-formula';
+
 	interface Props {
-		onsubmit: (players: string[]) => void;
+		onsubmit: (players: string[], scoringFormula: ScoringFormula) => void;
 	}
 	let { onsubmit }: Props = $props();
 
 	let nextId = $state(1);
 	const newPlayer = () => ({ id: nextId++, name: '' });
 	const inputs = $state([newPlayer()]);
+	let scoringFormula = $state<ScoringFormula>('n, n^2 + n + 10');
+
 	let error = $state('');
 </script>
 
@@ -15,14 +19,21 @@
 		onsubmit={(e) => {
 			e.preventDefault();
 			error = '';
-			let names = inputs.slice(0, -1).map((p) => p.name);
+			let names = inputs.filter((p) => p.name.trim().length > 0).map((p) => p.name);
 			if (new Set(names).size < names.length) {
 				error = 'All players must have unique names';
 				return;
 			}
-			onsubmit(names);
+			if (names.length < 2) {
+				error = 'There must be at least 2 players';
+				return;
+			}
+			onsubmit(names, scoringFormula);
 		}}
 	>
+		<label for="players" class="block text-sm/6 font-medium text-gray-900">
+			Enter names in order of play (e.g. clockwise)
+		</label>
 		{#each inputs as input, i (input.id)}
 			<div class="mt-2">
 				<input
@@ -34,7 +45,7 @@
 					oninput={(e) => {
 						const name = (e.target as HTMLInputElement).value.trim();
 						inputs[i].name = name;
-						if (i == inputs.length - 1 && name.length > 0) {
+						if (i == inputs.length - 1 && name.length > 0 && inputs.length < 6) {
 							inputs.push(newPlayer());
 						}
 					}}
@@ -65,6 +76,24 @@
 				/>
 			</div>
 		{/each}
+		<div class="mt-4">
+			<label for="scoring-formula" class="block text-sm/6 font-medium text-gray-900">
+				Scoring Formula
+			</label>
+			<div class="mt-2 grid grid-cols-1">
+				<select
+					id="scoring-formula"
+					name="scoring-formula"
+					class="block w-full max-w-96 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+					bind:value={scoringFormula}
+				>
+					<option disabled>score if incorrect, score if correct (n = tricks taken)</option>
+					{#each Object.keys(SCORING_FORMULA_OPTIONS) as formula}
+						<option selected={scoringFormula == formula}>{formula}</option>
+					{/each}
+				</select>
+			</div>
+		</div>
 		{#if error}
 			<p class="mt-2 text-sm text-red-600">{error}</p>
 		{/if}

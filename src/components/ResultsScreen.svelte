@@ -4,7 +4,7 @@
 	import type { Player, PlayerId, RoundResult } from '$lib/game';
 
 	interface Props {
-		players: Player[];
+		players: readonly Player[];
 		results: RoundResult;
 		onChange: (playerId: PlayerId, tricksWon: number | null) => void;
 		round: number;
@@ -15,11 +15,15 @@
 		value === null ? null : Math.max(0, Math.min(value, round + 1))
 	);
 
-	// maybe we track modifiedField here, and then call onChange when we blur
 	let activeField = $state<string | null>(null);
 	let activeFieldValue = $state<number | null>(0);
-
-	let error = $state('');
+	const tricksUnaccountedFor = $derived(
+		round +
+			1 -
+			Object.values(results)
+				.map((player) => player.won ?? 0)
+				.reduce((acc, x) => acc + x, 0)
+	);
 </script>
 
 <h3 class="py-4 text-center text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
@@ -45,9 +49,11 @@
 					type="number"
 					class="z-20 block w-full bg-white px-3 py-1.5 text-center text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 [appearance:textfield] placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 					{value}
-					onfocus={() => {
+					onfocus={(e) => {
+						(e.target as HTMLInputElement).select();
 						activeField = player.id;
-						activeFieldValue = valueNum;
+						// activeFieldValue needs to be updated first to avoid resetting the value.
+						activeFieldValue = value;
 					}}
 					onblur={() => {
 						onChange(player.id, clamp(activeFieldValue));
@@ -59,6 +65,7 @@
 						}
 					}}
 					onchange={(e) => {
+						console.log('onchange');
 						const val = (e.target as HTMLInputElement).value.trim();
 						activeFieldValue = val === '' ? null : parseInt(val);
 					}}
@@ -81,3 +88,10 @@
 		</div>
 	</div>
 {/each}
+{#if tricksUnaccountedFor !== 0}
+	<p class="text-center text-sm text-gray-500">
+		{Math.abs(tricksUnaccountedFor)}
+		{Math.abs(tricksUnaccountedFor) === 1 ? 'trick' : 'tricks'}
+		{tricksUnaccountedFor > 0 ? 'unaccounted for.' : 'too many reported.'}
+	</p>
+{/if}
