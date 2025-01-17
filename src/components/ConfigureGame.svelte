@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { SCORING_FORMULA_OPTIONS, type ScoringFormula } from '$lib/scoring-formula';
+	import {
+		SCORING_METHODS,
+		DEFAULT_SCORING_METHOD,
+		type ScoringMethod
+	} from '$lib/scoring-formula';
 
 	interface Props {
-		onsubmit: (players: string[], scoringFormula: ScoringFormula) => void;
+		onsubmit: (players: string[], scoringFormula: ScoringMethod) => void;
 	}
 	let { onsubmit }: Props = $props();
 
 	let nextId = $state(1);
 	const newPlayer = () => ({ id: nextId++, name: '' });
 	const inputs = $state([newPlayer()]);
-	let scoringFormula = $state<ScoringFormula>('n, n^2 + n + 10');
+	let scoringFormula = $state(DEFAULT_SCORING_METHOD);
 
 	let error = $state('');
 </script>
@@ -88,8 +92,8 @@
 					bind:value={scoringFormula}
 				>
 					<option disabled>score if incorrect, score if correct (n = tricks taken)</option>
-					{#each Object.keys(SCORING_FORMULA_OPTIONS) as formula}
-						<option selected={scoringFormula == formula}>{formula}</option>
+					{#each SCORING_METHODS as method (method.formula)}
+						<option value={method.formula} label="{method.name}: {method.formula}"> </option>
 					{/each}
 				</select>
 			</div>

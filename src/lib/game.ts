@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { randRange } from "./utils";
-import { SCORING_FORMULA_OPTIONS, type ScoringFormula } from "./scoring-formula";
+import { SCORING_METHODS, type ScoringMethod } from "./scoring-formula";
 
 export type PlayerId = string;
 
@@ -24,30 +24,30 @@ export class Game {
     readonly rounds: RoundResult[];
     readonly currentRound: number;
     readonly initialDealer: PlayerId;
-    readonly scoringFormula: ScoringFormula;
+    readonly scoringMethod: ScoringMethod;
     readonly tag: number;
 
-    constructor(id: string, createdTime: Timestamp, players: readonly Player[], rounds: RoundResult[], currentRound: number, initialDealer: PlayerId, scoringFormula: ScoringFormula) {
+    constructor(id: string, createdTime: Timestamp, players: readonly Player[], rounds: RoundResult[], currentRound: number, initialDealer: PlayerId, scoringMethod: ScoringMethod) {
         this.id = id;
         this.createdTime = createdTime;
         this.players = Object.freeze(players);
         this.rounds = rounds;
         this.currentRound = currentRound;
         this.initialDealer = initialDealer;
-        this.scoringFormula = scoringFormula;
+        this.scoringMethod = scoringMethod;
         this.tag = randRange(100000, 999999);
     }
 
-    static new(id: string, players: string[], scoringFormula: ScoringFormula) {
+    static new(id: string, players: string[], scoringMethod: ScoringMethod) {
         const mappedPlayers = players.map(name => ({ name, id: name }));
-        return new Game(id, Timestamp.now(), mappedPlayers, [], 0, mappedPlayers[randRange(0, mappedPlayers.length)].id, scoringFormula);
+        return new Game(id, Timestamp.now(), mappedPlayers, [], 0, mappedPlayers[randRange(0, mappedPlayers.length)].id, scoringMethod);
     }
 
     static fromJson(json: Record<string, unknown>, id: string) {
         try {
             const rounds = json.rounds as Record<string, RoundResult>;
-            if (!((json.scoringFormula as string) in SCORING_FORMULA_OPTIONS)) {
-                throw new Error(`Invalid scoring formula`);
+            if (!SCORING_METHODS.find(m => m.formula === json.scoringMethod)) {
+                throw new Error(`Invalid scoring method`);
             }
             console.log("json", json.players)
             return new Game(
@@ -57,7 +57,7 @@ export class Game {
                 Array(Object.keys(rounds).length).fill(null).map((_, i) => rounds[i + ""]),
                 json.currentRound as number,
                 json.initialDealer as PlayerId,
-                json.scoringFormula as ScoringFormula
+                json.scoringMethod as ScoringMethod
             );
         } catch (e) {
             console.error(e);
@@ -66,7 +66,7 @@ export class Game {
     }
 
     clone() {
-        return new Game(this.id, this.createdTime, structuredClone(this.players), structuredClone(this.rounds), this.currentRound, this.initialDealer, this.scoringFormula);
+        return new Game(this.id, this.createdTime, structuredClone(this.players), structuredClone(this.rounds), this.currentRound, this.initialDealer, this.scoringMethod);
     }
 
     toJson() {
@@ -78,7 +78,7 @@ export class Game {
             rounds: Object.fromEntries(this.rounds.map((round, i) => [i + "", round])),
             currentRound: this.currentRound,
             initialDealer: this.initialDealer,
-            scoringFormula: this.scoringFormula,
+            scoringMethod: this.scoringMethod,
         };
     }
 
@@ -139,7 +139,11 @@ export class Game {
      * Calculates the score for a given bid and number of tricks won.
      */
     calculateScore(won: number, bid: number) {
-        return SCORING_FORMULA_OPTIONS[this.scoringFormula](won, bid);
+        const scoringMethod = SCORING_METHODS.find(m => m.formula === this.scoringMethod);
+        if (!scoringMethod) {
+            throw new Error(`Invalid scoring method`);
+        }
+        return scoringMethod.function(won, bid);
     }
 
     /**

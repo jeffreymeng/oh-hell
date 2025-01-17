@@ -42,7 +42,6 @@
 			}
 		);
 	});
-	$inspect(game);
 </script>
 
 <h2 class="pb-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Oh Hell</h2>
