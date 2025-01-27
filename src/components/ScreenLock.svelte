@@ -3,9 +3,11 @@
 	let initialized = $state(false);
 	let wakeLock: WakeLockSentinel | null = $state(null);
 
+	const WAKE_LOCK_ENABLED_LOCALSTORAGE_KEY = 'wakeLockEnabled';
+
 	$effect(() => {
 		if (!initialized) {
-			if (localStorage.getItem('wakeLockEnabled') == 'yes') {
+			if (localStorage.getItem(WAKE_LOCK_ENABLED_LOCALSTORAGE_KEY) == 'yes') {
 				lockEnabled = true;
 			}
 			initialized = true;
@@ -28,16 +30,16 @@
 			if (lockEnabled) {
 				try {
 					await requestWakeLock();
-					localStorage.setItem('wakeLockEnabled', 'yes');
+					localStorage.setItem(WAKE_LOCK_ENABLED_LOCALSTORAGE_KEY, 'yes');
 				} catch (e) {
 					alert('Failed to enable screen wake lock: ' + e);
 					console.error(e);
 
 					lockEnabled = false;
-					localStorage.setItem('wakeLockEnabled', 'no');
+					localStorage.setItem(WAKE_LOCK_ENABLED_LOCALSTORAGE_KEY, 'no');
 				}
 			} else {
-				localStorage.setItem('wakeLockEnabled', 'no');
+				localStorage.setItem(WAKE_LOCK_ENABLED_LOCALSTORAGE_KEY, 'no');
 				wakeLock?.release();
 			}
 		})();

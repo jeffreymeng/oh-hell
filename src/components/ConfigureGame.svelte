@@ -1,21 +1,19 @@
 <script lang="ts">
-	import {
-		SCORING_METHODS,
-		DEFAULT_SCORING_METHOD,
-		type ScoringMethod
-	} from '$lib/scoring-formula';
+	import { SCORING_METHODS, DEFAULT_SCORING_METHOD, type ScoringMethod } from '$lib/scoring-method';
 
 	interface Props {
-		onsubmit: (players: string[], scoringFormula: ScoringMethod) => void;
+		onsubmit: (players: string[], scoringMethod: ScoringMethod) => void;
 	}
 	let { onsubmit }: Props = $props();
+
+	const SCORING_METHOD_LOCCALSTORAGE_KEY = 'scoringMethod';
 
 	let nextId = $state(1);
 	const newPlayer = () => ({ id: nextId++, name: '' });
 	const inputs = $state([newPlayer()]);
-	let scoringFormula = $state(
+	let scoringMethod = $state(
 		typeof localStorage !== 'undefined'
-			? (localStorage.getItem('scoringFormula') ?? DEFAULT_SCORING_METHOD)
+			? (localStorage.getItem(SCORING_METHOD_LOCCALSTORAGE_KEY) ?? DEFAULT_SCORING_METHOD)
 			: DEFAULT_SCORING_METHOD
 	);
 
@@ -36,7 +34,7 @@
 				error = 'There must be at least 2 players';
 				return;
 			}
-			onsubmit(names, scoringFormula);
+			onsubmit(names, scoringMethod);
 		}}
 	>
 		<label for="players" class="block text-sm/6 font-medium text-gray-900">
@@ -93,10 +91,10 @@
 					id="scoring-formula"
 					name="scoring-formula"
 					class="block w-full max-w-96 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-					bind:value={scoringFormula}
+					bind:value={scoringMethod}
 					onchange={(e) => {
-						scoringFormula = (e.target as HTMLSelectElement).value;
-						localStorage.setItem('scoringFormula', scoringFormula);
+						scoringMethod = (e.target as HTMLSelectElement).value;
+						localStorage.setItem(SCORING_METHOD_LOCCALSTORAGE_KEY, scoringMethod);
 					}}
 				>
 					<option disabled>score if incorrect, score if correct (n = tricks taken)</option>
