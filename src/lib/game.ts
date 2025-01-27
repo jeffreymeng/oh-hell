@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { randRange } from "./utils";
-import { SCORING_METHODS, type ScoringMethod } from "./scoring-formula";
+import { SCORING_METHODS, type ScoringMethod } from "./scoring-method";
 
 export type PlayerId = string;
 

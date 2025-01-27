@@ -13,7 +13,11 @@
 	let nextId = $state(1);
 	const newPlayer = () => ({ id: nextId++, name: '' });
 	const inputs = $state([newPlayer()]);
-	let scoringFormula = $state(DEFAULT_SCORING_METHOD);
+	let scoringFormula = $state(
+		typeof localStorage !== 'undefined'
+			? (localStorage.getItem('scoringFormula') ?? DEFAULT_SCORING_METHOD)
+			: DEFAULT_SCORING_METHOD
+	);
 
 	let error = $state('');
 </script>
@@ -90,6 +94,10 @@
 					name="scoring-formula"
 					class="block w-full max-w-96 rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
 					bind:value={scoringFormula}
+					onchange={(e) => {
+						scoringFormula = (e.target as HTMLSelectElement).value;
+						localStorage.setItem('scoringFormula', scoringFormula);
+					}}
 				>
 					<option disabled>score if incorrect, score if correct (n = tricks taken)</option>
 					{#each SCORING_METHODS as method (method.formula)}

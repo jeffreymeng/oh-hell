@@ -2,7 +2,7 @@ import { FirebaseError, initializeApp } from "firebase/app";
 import { doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { customAlphabet } from "nanoid";
 import { Game, type PlayerId } from "./game";
-import type { ScoringFormula } from "./scoring-formula";
+import type { ScoringFormula, ScoringMethod } from "./scoring-method";
 
 const ID_ALPHABET = "123456789abcdefghijkmnopqrstuvwxyz"; // excludes l/0 (similiar to I/O)
 
@@ -24,7 +24,7 @@ export const db = getFirestore(app);
 /**
  * Creates a new game with the provided list of player names.
  */
-export async function newGame(players: string[], scoringFormula: ScoringFormula) {
+export async function newGame(players: string[], scoringMethod: ScoringMethod) {
     const MAX_RETRIES_PER_LENGTH = 5;
     const MAX_LENGTH = 9;
     for (let length = 6; length <= MAX_LENGTH; length++) {
@@ -33,7 +33,7 @@ export async function newGame(players: string[], scoringFormula: ScoringFormula)
         for (let i = 0; i < MAX_RETRIES_PER_LENGTH; i++) {
             const id = nanoid();
             try {
-                const gameJson = Game.new(id, players, scoringFormula).toJson();
+                const gameJson = Game.new(id, players, scoringMethod).toJson();
                 (gameJson as Record<string, unknown>).createdTime = serverTimestamp();
                 await setDoc(doc(db, "games", id), gameJson);
                 return id;
