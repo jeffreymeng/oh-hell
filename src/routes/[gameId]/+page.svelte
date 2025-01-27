@@ -16,6 +16,7 @@
 	import HistoryChart from '../../components/HistoryChart.svelte';
 	import GameOverScreen from '../../components/GameOverScreen.svelte';
 	import { goto } from '$app/navigation';
+	import ScreenLock from '../../components/ScreenLock.svelte';
 
 	let game = $state<Game | null>(null);
 	const gameId = $page.params.gameId;
@@ -61,7 +62,6 @@
 	{#if game.isOver()}
 		<GameOverScreen {game} />
 	{:else if game.currentBidder() !== null}
-		{game.players.map((p) => p.id).join(', ')}
 		<BiddingScreen
 			bidderName={game.currentBidder()?.name ?? ''}
 			maxBid={game.currentRound + 1}
@@ -116,7 +116,6 @@
 						if (game.currentRound === 0) {
 							throw new Error('Internal error: current round is 0.');
 						}
-						console.log('hi', game.currentRound, game.currentRound - 1);
 						await updateCurrentRound(game, game.currentRound - 1);
 					}
 				}}>Back {game.currentBidder() === null ? 'to Bidding' : ''}</button
@@ -149,7 +148,7 @@
 				onclick={async () => {
 					const id = await newGame(
 						game!.players.map((p) => p.name),
-						game!.scoringFormula
+						game!.scoringMethod
 					);
 					goto(`/${id}`);
 				}}
@@ -168,6 +167,8 @@
 		<HistoryChart {game} />
 		<HistoryTable {game} />
 	{/if}
+
+	<ScreenLock />
 {:else}
 	<p>Loading...</p>
 {/if}
