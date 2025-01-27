@@ -37,7 +37,7 @@
 		<div class="inline-flex w-[12.75rem]">
 			<div class="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
 				<button
-					class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 enabled:hover:bg-gray-100"
+					class="relative inline-flex touch-manipulation items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 enabled:hover:bg-gray-100"
 					tabindex="-1"
 					onclick={() => onChange(player.id, valueNum - 1)}
 					disabled={valueNum <= 0}
@@ -48,13 +48,14 @@
 				<input
 					type="number"
 					pattern="[0-9]*"
-					class="z-20 block w-full bg-white px-3 py-1.5 text-center text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 [appearance:textfield] placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+					class="z-20 block w-full touch-manipulation bg-white px-3 py-1.5 text-center text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 [appearance:textfield] placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
 					{value}
 					onfocus={(e) => {
 						(e.target as HTMLInputElement).select();
-						activeField = player.id;
+
 						// activeFieldValue needs to be updated first to avoid resetting the value.
 						activeFieldValue = value;
+						activeField = player.id;
 					}}
 					onblur={() => {
 						onChange(player.id, clamp(activeFieldValue));
@@ -72,7 +73,7 @@
 					}}
 				/>
 				<button
-					class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 enabled:hover:bg-gray-100"
+					class="relative inline-flex touch-manipulation items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 enabled:hover:bg-gray-100"
 					tabindex="-1"
 					onclick={() => onChange(player.id, valueNum + 1)}
 					disabled={valueNum >= round + 1}
